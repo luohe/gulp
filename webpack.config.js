@@ -48,7 +48,7 @@ module.exports = {
         alias: {
             ui: srcDir + "/js/ui"
         },
-        extensions: ['', '.js', '.json', '.coffee']
+        extensions: ['', '.js', '.coffee']
     },
     plugins: [
         new CommonsChunkPlugin('common.js'),

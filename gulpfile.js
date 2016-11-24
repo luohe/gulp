@@ -1,7 +1,3 @@
-/**
- Gulpfile for gulp-webpack-demo
- created by fwon
-*/
 var gulp = require('gulp'),
     os = require('os'),
     gutil = require('gulp-util'),
@@ -83,7 +79,6 @@ gulp.task('md5:js', ['build-js'], function (done) {
     .pipe(md5(6, 'dist/app/*.html'))
     .pipe(gulp.dest('dist/js'))
     .on('end', done)
-    .pipe(connect.reload());
 });
 
 gulp.task('md5:css', ['sprite'], function (done) {
@@ -91,7 +86,6 @@ gulp.task('md5:css', ['sprite'], function (done) {
         .pipe(md5(6, 'dist/app/*.html'))
         .pipe(gulp.dest('dist/css'))
         .on('end', done)
-        .pipe(connect.reload())
 });
 
 gulp.task('fileinclude', function (done) {
@@ -119,7 +113,7 @@ gulp.task('sprite', ['copy:images', 'lessmin'], function (done) {
         .pipe(cssmin())
         .pipe(gulp.dest('dist/css'))
         .on('end', done)
-        .pipe(connect.reload());
+      .pipe(connect.reload());
 });
 
 gulp.task('clean', function (done) {
@@ -129,9 +123,18 @@ gulp.task('clean', function (done) {
 });
 
 gulp.task('watch', function (done) {
-    gulp.watch('src/**/*', ['lessmin', 'build-js', 'fileinclude'])
+    gulp.watch('src/app/*', [ 'fileinclude'])
         .on('end', done)
 });
+gulp.task('watch', function (done) {
+  gulp.watch('src/css/*', ['lessmin'])
+    .on('end', done)
+});
+gulp.task('watch', function (done) {
+  gulp.watch('src/js/*', ['build-js'])
+    .on('end', done)
+});
+
 
 gulp.task('connect', function () {
     console.log("--------------------------------");
@@ -142,7 +145,6 @@ gulp.task('connect', function () {
         port: host.port,
         livereload: true
     });
-
 });
 
 gulp.task('open', function (done) {
@@ -152,7 +154,6 @@ gulp.task('open', function (done) {
             uri: 'http://localhost:3000/app'
         }))
         .on('end', done)
-      .pipe(connect.reload());
 });
 
 var myDevConfig = Object.create(webpackConfig);
