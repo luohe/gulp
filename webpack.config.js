@@ -23,15 +23,17 @@ function getEntry() {
 }
 
 module.exports = {
+    // watch:true,
     cache: true,
     devtool: "source-map",
-    entry: getEntry(),
-    output: {
-        path: path.join(__dirname, "dist/js/"),
-        publicPath: "dist/js/",
-        filename: "[name].js",
-        chunkFilename: "[chunkhash].js"
-    },
+    // entry: "C:\\Users\\Administrator\\Desktop\\company\\gulp\\src\\js\\main.js",
+    // entry:getEntry(),
+    // output: {
+    //     path: path.join(__dirname, "dist/js/"),
+    //     publicPath: "dist/js/",
+    //     filename: "[name].js",
+    //     chunkFilename: "[chunkhash].js"
+    // },
     module:{
         loaders: [
             {
@@ -48,14 +50,6 @@ module.exports = {
         alias: {
             ui: srcDir + "/js/ui"
         },
-        extensions: ['', '.js', '.coffee']
-    },
-    plugins: [
-        new CommonsChunkPlugin('common.js'),
-        new uglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
-        })
-    ]
+        extensions: ['', '.js', '.json', '.coffee']
+    }
 };
