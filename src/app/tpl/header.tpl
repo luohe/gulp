@@ -1,9 +1,10 @@
 <head>
-	<meta charset="utf-8">
-	<title>网易充值购卡中心</title>
-	<meta name="keywords" content="">
-	<meta name="description" content="">
-	<meta name="copyright" content="网易，NetEase Inc.">
-	<meta name="fed" content="rukey67">
+    <meta charset="UTF-8">
+    <meta name="keywords" content="麦直播">
+    <meta name="description" content="麦直播">
+    <meta name=”renderer” content=”webkit|ie-comp|ie-stand” />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>麦直播：搜索页</title>
+    <link rel="shortcut icon" type="images/x-icon" href="">
     <link rel="stylesheet" href="../css/style.min.css">
 </head>

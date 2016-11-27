@@ -2,7 +2,6 @@ var CommonsChunkPlugin = require("webpack/lib/optimize/CommonsChunkPlugin");
 var path = require('path');
 var webpack = require('webpack');
 var fs = require('fs');
-var uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 var srcDir = path.resolve(process.cwd(), 'src');
 
@@ -23,17 +22,8 @@ function getEntry() {
 }
 
 module.exports = {
-    // watch:true,
     cache: true,
     devtool: "source-map",
-    // entry: "C:\\Users\\Administrator\\Desktop\\company\\gulp\\src\\js\\main.js",
-    // entry:getEntry(),
-    // output: {
-    //     path: path.join(__dirname, "dist/js/"),
-    //     publicPath: "dist/js/",
-    //     filename: "[name].js",
-    //     chunkFilename: "[chunkhash].js"
-    // },
     module:{
         loaders: [
             {
