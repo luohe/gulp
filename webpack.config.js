@@ -22,7 +22,7 @@ function getEntry() {
 }
 
 module.exports = {
-    cache: true,
+    // cache: true,
     devtool: "source-map",
     module:{
         loaders: [
