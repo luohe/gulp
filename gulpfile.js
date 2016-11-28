@@ -23,7 +23,8 @@ var gulp = require('gulp'),
   connect = require('gulp-connect'),
   autoprefixer = require('gulp-autoprefixer'),
   named = require('vinyl-named'),
-  colors = require('colors');
+  colors = require('colors'),
+  plumber = require('gulp-plumber');
 
 /*
  * 开发环境
@@ -83,19 +84,20 @@ gulp.task('copy:images', function (done) {
 });
 
 //handleError;错误处理函数
-function handleError(){
-  var args = Array.prototype.slice.call(arguments);
-  notity.onError({
-    title:'compole error',
-    message:'<%=error.message%>'
-  }).apply(this,args);
-  this.emit()
-}
+// function handleError(){
+//   var args = Array.prototype.slice.call(arguments);
+//   notity.onError({
+//     title:'compole error',
+//     message:'<%=error.message%>'
+//   }).apply(this,args);
+//   this.emit()
+// }
 gulp.task('lessmin', function (done) {
   gulp.src(['src/css/main.less', 'src/css/*.css'])
+    .pipe(plumber())
     .pipe(sourcemaps.init())
     .pipe(less())
-    .on('error',handleError)
+    // .on('error',handleError)
     .pipe(sourcemaps.write())
     .pipe(autoprefixer({
       browsers: ['last 2 versions', 'Android >= 4.0'],
@@ -122,10 +124,9 @@ var devCompiler = webpack(myDevConfig);
 
 gulp.task("build-js", function(callback) {
   return gulp.src('src/js/*.js')
+    .pipe(plumber())
     .pipe(named())
-    // .pipe(sourcemaps.init())
     .pipe(webpackS(webpackConfig))
-    // .pipe(sourcemaps.write())
     .pipe(gulp.dest('dist/js/'))
     .pipe(reload({stream:true}));
 });
@@ -136,9 +137,11 @@ gulp.task('serve',['lessmin'],function(){
     server:"./dist/"
   });
   
-  gulp.watch('src/**/*', ['lessmin', 'fileInclude'])
+  gulp.watch('src/css/*', ['lessmin'])
     .on('end', reload);
-  gulp.watch("./*.html").on('change',reload);
+  gulp.watch("src/app/*",['fileInclude'])
+    .on('end',reload);
+  
   gulp.watch('src/**/*.js', ['build-js'])
     .on('end', reload)
 });
