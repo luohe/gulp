@@ -6,7 +6,7 @@ var fs = require('fs');
 var srcDir = path.resolve(process.cwd(), 'src');
 
 //获取多页面的每个入口文件，用于配置中的entry
-function getEntry() {
+function getEntry (){
     var jsPath = path.resolve(srcDir, 'js');
     var dirs = fs.readdirSync(jsPath);
     var matchs = [], files = {};
@@ -22,8 +22,9 @@ function getEntry() {
 }
 
 module.exports = {
-    // cache: true,
+    cache: true,
     devtool: "source-map",
+    externals: {'d3': 'window.d3'},
     module:{
         loaders: [
             {

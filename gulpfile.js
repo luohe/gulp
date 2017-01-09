@@ -4,6 +4,7 @@
  */
 var gulp = require('gulp'),
   os = require('os'),
+  fs = require('fs'),
   browserSync = require('browser-sync').create(),
   reload = browserSync.reload,
   less = require('gulp-less'),
@@ -24,7 +25,11 @@ var gulp = require('gulp'),
   autoprefixer = require('gulp-autoprefixer'),
   named = require('vinyl-named'),
   colors = require('colors'),
-  plumber = require('gulp-plumber');
+  plumber = require('gulp-plumber'),
+  watch = require("node-watch");
+
+
+
 
 /*
  * 开发环境
@@ -37,13 +42,12 @@ var gulp = require('gulp'),
  * * 浏览器同步测试
  * */
 
-
 //命令行着色
 colors.setTheme({
   silly: 'rainbow',
   input: 'grey',
   verbose: 'cyan',
-  prompt: 'grey',
+  prompt: 'gray',
   info: 'green',
   data: 'grey',
   help: 'cyan',
@@ -65,7 +69,7 @@ for (var dev in ifaces) {
 
 var host = {
   path: 'dist/',
-  port: 3000,
+  port: 2000,
   html: 'index.html'
 };
 
@@ -76,6 +80,22 @@ var browser = os.platform() === 'linux' ? 'Google chrome' : (
     os.platform() === 'win32' ? 'chrome' : 'firefox'));
 var pkg = require('./package.json');
 
+
+var watcher = watch('./src/js/', { recursive: false, followSymLinks: true });
+watcher.on('change', function(fileName) {
+  var oldTime = new Date();
+  gulp.src(fileName)
+    .pipe(plumber())
+    .pipe(named())
+    .pipe(webpackS(webpackConfig))
+    .pipe(gulp.dest('dist/js/'))
+    .on("end",function () {
+      var newTime = new Date();
+      console.log("[BS]".prompt+(" 耗时："+(newTime - oldTime)+"ms").verbose);
+    })
+    .pipe(reload({stream:true}));
+});
+
 gulp.task('copy:images', function (done) {
   gulp.src(['src/images/**/*'])
     .pipe(gulp.dest('dist/images'))
@@ -83,17 +103,8 @@ gulp.task('copy:images', function (done) {
     .pipe(connect.reload());
 });
 
-//handleError;错误处理函数
-// function handleError(){
-//   var args = Array.prototype.slice.call(arguments);
-//   notity.onError({
-//     title:'compole error',
-//     message:'<%=error.message%>'
-//   }).apply(this,args);
-//   this.emit()
-// }
 gulp.task('lessmin', function (done) {
-  gulp.src(['src/css/main.less', 'src/css/*.css'])
+  gulp.src(['src/css/main.less'])
     .pipe(plumber())
     .pipe(sourcemaps.init())
     .pipe(less())
@@ -115,10 +126,11 @@ gulp.task('fileInclude', function (done) {
       prefix: '@@',
       basepath: '@file'
     }))
-    .pipe(gulp.dest('dist/app'))
+    .pipe(gulp.dest('dist/app/'))
     .on('end', done)
     .pipe(reload({stream:true}))
 });
+
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
 
@@ -131,28 +143,27 @@ gulp.task("build-js", function(callback) {
     .pipe(reload({stream:true}));
 });
 
-//静态服务器+监听less/html 文件
+gulp.task("lib-js",function () {
+  return gulp.src("src/lib/*.js")
+    .pipe(plumber())
+    .pipe(gulp.dest("dist/lib/"))
+    .pipe(reload({stream:true}))
+  
+});
+
+//静态服务器+监听less/html/js 文件
 gulp.task('serve',['lessmin'],function(){
   browserSync.init({
+    port: 3007,
     server:"./dist/"
   });
-  
   gulp.watch('src/css/*', ['lessmin'])
     .on('end', reload);
   gulp.watch("src/app/*",['fileInclude'])
     .on('end',reload);
-  
-  gulp.watch('src/**/*.js', ['build-js'])
-    .on('end', reload)
+  gulp.watch("src/lib/*.js",['lib-js']);
 });
 
-gulp.task('browser-sync',function(){
-  browserSync.init({
-    server:{
-      baseDir:"./dist/"
-    }
-  })
-});
 
 /*
  * 生产环境
@@ -162,8 +173,7 @@ gulp.task('md5:css', ['sprite'], function (done) {
   gulp.src('dist/css/*.css')
     .pipe(md5(6, 'dist/app/*.html'))
     .pipe(gulp.dest('dist/css'))
-    .on('end', done)
-    .pipe(reload({stream:true}))
+    .on('end', done);
 });
 
 gulp.task('md5:js', ['build-js'], function (done){
@@ -173,8 +183,7 @@ gulp.task('md5:js', ['build-js'], function (done){
     ])
     .pipe(md5(6,'dist/app/*.html'))
     .pipe(gulp.dest('dist/js'))
-    .on('end', done)
-    .pipe(reload({stream:true}))
+    .on('end', done);
 });
 
 gulp.task('md5:image', ['build-js'], function (done){
@@ -184,8 +193,7 @@ gulp.task('md5:image', ['build-js'], function (done){
     ])
     .pipe(md5(6,['dist/css/*.css','dist/app/*.html']))
     .pipe(gulp.dest('dist/images'))
-    .on('end', done)
-    .pipe(reload({stream:true}))
+    .on('end', done);
 });
 
 gulp.task('clean', function (done) {
@@ -214,6 +222,6 @@ gulp.task('sprite', ['copy:images', 'lessmin'], function (done) {
 });
 
 //发布
-gulp.task('default',[ 'fileInclude', 'md5:css', 'md5:js','md5:image', 'serve']);
+gulp.task('default',[ 'fileInclude', 'md5:css', 'md5:js','md5:image','lib-js', 'serve']);
 //开发
-gulp.task('dev', ['copy:images','fileInclude' , 'lessmin','build-js', 'serve']);
+gulp.task('dev', ['copy:images','fileInclude' , 'lessmin','build-js','lib-js', 'serve']);

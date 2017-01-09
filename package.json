@@ -26,8 +26,10 @@
     "gulp-util": "~2.2.9",
     "gulp-watch": "4.1.0",
     "gulp-webpack": "^1.5.0",
+    "node-watch": "^0.4.1",
     "require.js": "^1.0.0",
     "vinyl-named": "^1.1.0",
+    "watchify": "^3.8.0",
     "webpack": "~1.0.0-beta6",
     "webpack-stream": "^3.2.0"
   },
@@ -37,6 +39,8 @@
   },
   "license": "ISC",
   "dependencies": {
+    "d3": "^4.4.0",
+    "d3-scale": "^1.0.4",
     "jquery": "^3.1.1"
   },
   "description": "A Front End Project Construction:gulp-webpack",
