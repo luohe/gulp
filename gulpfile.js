@@ -26,6 +26,12 @@ var gulp = require('gulp'),
   named = require('vinyl-named'),
   colors = require('colors'),
   plumber = require('gulp-plumber'),
+  //圖片壓縮模塊
+  imagemin = require('gulp-imagemin'),
+  pngquant = require('imagemin-pngquant'),
+  smushit = require('gulp-smushit'),
+  cache = require('gulp-cache'),
+  
   watch = require("node-watch");
 
 
@@ -81,20 +87,7 @@ var browser = os.platform() === 'linux' ? 'Google chrome' : (
 var pkg = require('./package.json');
 
 
-var watcher = watch('./src/js/', { recursive: false, followSymLinks: true });
-watcher.on('change', function(fileName) {
-  var oldTime = new Date();
-  gulp.src(fileName)
-    .pipe(plumber())
-    .pipe(named())
-    .pipe(webpackS(webpackConfig))
-    .pipe(gulp.dest('dist/js/'))
-    .on("end",function () {
-      var newTime = new Date();
-      console.log("[BS]".prompt+(" 耗时："+(newTime - oldTime)+"ms").verbose);
-    })
-    .pipe(reload({stream:true}));
-});
+
 
 gulp.task('copy:images', function (done) {
   gulp.src(['src/images/**/*'])
@@ -104,7 +97,7 @@ gulp.task('copy:images', function (done) {
 });
 
 gulp.task('lessmin', function (done) {
-  gulp.src(['src/css/main.less'])
+  gulp.src(['src/css/*.less'])
     .pipe(plumber())
     .pipe(sourcemaps.init())
     .pipe(less())
@@ -115,7 +108,7 @@ gulp.task('lessmin', function (done) {
       cascade: true,                                           // 是否美化属性值 默认：true 像这样：
       remove:true                                              // 是否去掉不必要的前缀 默认：true
     }))
-    .pipe(concat('style.min.css'))
+    // .pipe(concat('style.min.css'))
     .pipe(gulp.dest('dist/css/'))
     .on('end', done)
     .pipe(reload({stream:true}))
@@ -161,7 +154,46 @@ gulp.task('serve',['lessmin'],function(){
     .on('end', reload);
   gulp.watch("src/app/*",['fileInclude'])
     .on('end',reload);
-  gulp.watch("src/lib/*.js",['lib-js']);
+  // gulp.watch("src/lib/*.js",['lib-js']);
+  
+  var watcher = watch('./src/js/', { recursive: false, followSymLinks: true });
+  watcher.on('change', function(fileName) {
+    var oldTime = new Date();
+    gulp.src(fileName)
+      .pipe(plumber())
+      .pipe(named())
+      .pipe(webpackS(webpackConfig))
+      .pipe(gulp.dest('dist/js/'))
+      .on("end",function () {
+        var newTime = new Date();
+        console.log("[BS]".prompt+(" 耗时："+(newTime - oldTime)+"ms").verbose);
+      })
+      .pipe(reload({stream:true}));
+  });
+  
+  var watchImg = watch('./src/images/', { recursive: false, followSymLinks: true });
+  watchImg.on('change',function (fileName) {
+    console.log(fileName);
+    var imgDir = __dirname + ("\\") + fileName;
+    var imgDist = __dirname +("\\dist\\")+ imgDir.match(/images\\.{1,}?\.(png|jpg|gif)/)[0];
+    if(fs.existsSync(imgDir)){
+      if(!fs.existsSync(imgDist)){
+        gulp.src(imgDir)
+          .pipe(cache(imagemin({
+            optimizationLevel: 5,
+            progressive: true,
+            interlaced: true,
+            multipass: true,
+            use: [pngquant()]
+          })))
+          .pipe(gulp.dest("dist/images/"));
+      }
+    }else{
+      if(fs.existsSync(imgDist)){
+        fs.unlinkSync(imgDist);
+      }
+    }
+  })
 });
 
 
@@ -170,30 +202,57 @@ gulp.task('serve',['lessmin'],function(){
  * 对发布的js、css、images加md5版本号、压缩
  * */
 gulp.task('md5:css', ['sprite'], function (done) {
-  gulp.src('dist/css/*.css')
+  gulp.src([
+      'dist/css/*.css',
+      '!dist/css/*_??????.css'
+    ])
     .pipe(md5(6, 'dist/app/*.html'))
     .pipe(gulp.dest('dist/css'))
-    .on('end', done);
+    .on('end', function () {
+      gulp
+        .src([
+        'dist/css/*.css',
+        '!dist/css/*_??????.css'
+        ])
+        .pipe(clean())
+    });
 });
 
 gulp.task('md5:js', ['build-js'], function (done){
   gulp.src([
       'dist/js/*.js',
-      '!dist/js/*_??????????.js'
+      '!dist/js/*_??????.js'
     ])
     .pipe(md5(6,'dist/app/*.html'))
     .pipe(gulp.dest('dist/js'))
-    .on('end', done);
+    .on('end', function () {
+      gulp.src([
+          'dist/js/*.js',
+          '!dist/js/*_??????.js'
+        ])
+        .pipe(clean());
+      gulp.src([
+        'dist/js/*.js.map',
+        '!dist/js/*_??????.js.map'
+      ])
+        .pipe(clean())
+    });
 });
 
 gulp.task('md5:image', ['build-js'], function (done){
   gulp.src([
       'dist/images/*',
-      '!dist/js/*_??????????'
+      '!dist/images/*_??????.*'
     ])
     .pipe(md5(6,['dist/css/*.css','dist/app/*.html']))
     .pipe(gulp.dest('dist/images'))
-    .on('end', done);
+    .on('end', function () {
+      gulp.src([
+          'dist/images/*',
+          '!dist/images/*_??????.*'
+        ])
+        .pipe(clean())
+    });
 });
 
 gulp.task('clean', function (done) {
@@ -212,7 +271,7 @@ var spriteOption = {
 
 gulp.task('sprite', ['copy:images', 'lessmin'], function (done) {
   var timestamp = +new Date();
-  gulp.src('dist/css/style.min.css')
+  gulp.src('dist/css/**.css')
     .pipe(spriter(spriteOption))
     .pipe(base64())
     .pipe(cssmin())
@@ -222,6 +281,6 @@ gulp.task('sprite', ['copy:images', 'lessmin'], function (done) {
 });
 
 //发布
-gulp.task('default',[ 'fileInclude', 'md5:css', 'md5:js','md5:image','lib-js', 'serve']);
+gulp.task('default',[ 'fileInclude', 'md5:css', 'md5:js','md5:image', 'serve',"sprite"]);
 //开发
 gulp.task('dev', ['copy:images','fileInclude' , 'lessmin','build-js','lib-js', 'serve']);

@@ -24,7 +24,9 @@ function getEntry (){
 module.exports = {
     cache: true,
     devtool: "source-map",
-    externals: {'d3': 'window.d3'},
+    externals: {
+        'zepto':'Zepto'
+    },
     module:{
         loaders: [
             {
